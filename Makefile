@@ -1,5 +1,5 @@
 CXX = mpic++
-CXXFLAGS = -std=c++11 -g3 -Wall -I/usr/include/opencv4 -I/usr/include/opencv4/opencv
+CXXFLAGS = -g3 -fopenmp -Wall -I/usr/include/opencv4 -I/usr/include/opencv4/opencv
 MKDIR = mkdir -p
 
 LIBS = -lm -lmpi -lopencv_highgui -lopencv_imgcodecs -lopencv_features2d -lopencv_flann -lopencv_xphoto -lopencv_photo -lopencv_imgproc -lopencv_core
