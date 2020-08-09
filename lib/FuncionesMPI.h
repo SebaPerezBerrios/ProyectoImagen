@@ -1,6 +1,10 @@
+#ifndef FuncionesMPI_H
+#define FuncionesMPI_H
+
 #include <mpi.h>
 
 #include <opencv2/core.hpp>
+#include <vector>
 
 using namespace cv;
 
@@ -51,3 +55,19 @@ int recibirIntMPI(int origen) {
 }
 
 void enviarIntMPI(int entero, int destino) { MPI_Send(&entero, 1, MPI_INT, destino, 0, MPI_COMM_WORLD); }
+
+std::vector<int> particionar(int cantidad, int numeroParticiones) {
+  int particion = cantidad / numeroParticiones;
+  std::vector<int> particiones(numeroParticiones, particion);
+
+  auto resto = cantidad - particion * numeroParticiones;
+  for (auto& particion : particiones) {
+    if (resto--)
+      particion++;
+    else
+      break;
+  }
+  return particiones;
+}
+
+#endif
