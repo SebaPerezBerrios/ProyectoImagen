@@ -1,12 +1,13 @@
-#ifndef Escalado_H
-#define Escalado_H
+
+#ifndef EscalaGrises_H
+#define EscalaGrises_H
 
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 
-namespace escalado {
+namespace escalaGrises {
 
 using namespace cv;
 
@@ -38,9 +39,9 @@ void enviarImagen(int procesosReservados, int procesosTotales, const std::string
 void procesarImagen() {
   auto imagenRecibida = recibirImagenMPI(0);
 
-  resize(imagenRecibida, imagenRecibida, cv::Size(), 1.33, 1.33);
+  cvtColor(imagenRecibida, imagenRecibida, COLOR_BGR2GRAY);
 
   enviarImagenMPI(imagenRecibida, 0);
 }
-}  // namespace escalado
+}  // namespace escalaGrises
 #endif

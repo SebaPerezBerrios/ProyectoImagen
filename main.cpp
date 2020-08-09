@@ -9,6 +9,7 @@
 
 #include "lib/FuncionesMPI.h"
 #include "procesamiento/Difuminado.h"
+#include "procesamiento/EscalaGrises.h"
 #include "procesamiento/Escalado.h"
 
 using namespace cv;
@@ -16,7 +17,7 @@ using namespace std;
 
 #define Orquestador 0
 
-void unirImagen(int, int);
+void unirImagen(int, int, int  tipoImagen = CV_8UC3);
 
 int main(int argc, char** argv) {
   int mi_rango;
@@ -57,13 +58,13 @@ int main(int argc, char** argv) {
   return EXIT_SUCCESS;
 }
 
-void unirImagen(int procesosReservados, int procesosTotales) {
+void unirImagen(int procesosReservados, int procesosTotales, int tipoImagen) {
   auto imagenGenerada = Mat();
   int procesosEsclavos = procesosTotales - procesosReservados;
 
   // crear nueva imagen a partir de particiones
   for (int proceso = 0; proceso < procesosEsclavos; proceso++) {
-    auto imagenRecibida = recibirImagenMPI(procesosReservados + proceso);
+    auto imagenRecibida = recibirImagenMPI(procesosReservados + proceso, tipoImagen);
     imagenGenerada.push_back(imagenRecibida);
   }
 

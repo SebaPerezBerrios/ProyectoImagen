@@ -26,7 +26,7 @@ void enviarImagenMPI(Mat& img, int destino) {
   MPI_Send(img.data, dimensionDatos, MPI_UNSIGNED_CHAR, destino, 0, MPI_COMM_WORLD);
 }
 
-Mat recibirImagenMPI(int origen) {
+Mat recibirImagenMPI(int origen, int tipoImagen = CV_8UC3) {
   MPI_Status status;
 
   int dimensiones[3];
@@ -42,7 +42,7 @@ Mat recibirImagenMPI(int origen) {
 
   MPI_Recv(datosPtr, dimensionDatos, MPI_UNSIGNED_CHAR, origen, 0, MPI_COMM_WORLD, &status);
 
-  auto imagen = Mat(filas, columnas, CV_8UC3, datosPtr).clone();
+  auto imagen = Mat(filas, columnas, tipoImagen, datosPtr).clone();
   delete[] datosPtr;
   return imagen;
 }
