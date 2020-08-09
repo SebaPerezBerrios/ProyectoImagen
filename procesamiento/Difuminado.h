@@ -14,7 +14,8 @@ namespace difuminado {
 void enviarImagen(int procesosReservados, int procesosTotales, const std::string& nombreArchivo) {
   std::string image_path = samples::findFile(nombreArchivo);
 
-  Mat imagenOriginal = imread(image_path, IMREAD_COLOR);
+  Mat imagenOriginal = imread(image_path, IMREAD_UNCHANGED);
+  cv::cvtColor(imagenOriginal, imagenOriginal, cv::COLOR_RGB2RGBA);
 
   // offset usado para el blur, se envian regiones anexas para tener un difuminado suave entre particiones
   int offset = Blur / 2;

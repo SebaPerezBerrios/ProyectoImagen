@@ -26,7 +26,7 @@ void enviarImagenMPI(Mat& img, int destino) {
   MPI_Send(img.data, dimensionDatos, MPI_UNSIGNED_CHAR, destino, 0, MPI_COMM_WORLD);
 }
 
-Mat recibirImagenMPI(int origen, int tipoImagen = CV_8UC3) {
+Mat recibirImagenMPI(int origen, int tipoImagen = CV_8UC4) {
   MPI_Status status;
 
   int dimensiones[3];
@@ -38,7 +38,7 @@ Mat recibirImagenMPI(int origen, int tipoImagen = CV_8UC3) {
 
   int dimensionDatos = filas * columnas * dimension;
 
-  int* datosPtr = new int[dimensionDatos];
+  char* datosPtr = new char[dimensionDatos];
 
   MPI_Recv(datosPtr, dimensionDatos, MPI_UNSIGNED_CHAR, origen, 0, MPI_COMM_WORLD, &status);
 

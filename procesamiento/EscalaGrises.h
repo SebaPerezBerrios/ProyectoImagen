@@ -14,7 +14,8 @@ using namespace cv;
 void enviarImagen(int procesosReservados, int procesosTotales, const std::string& nombreArchivo) {
   std::string image_path = samples::findFile(nombreArchivo);
 
-  Mat imagenOriginal = imread(image_path, IMREAD_COLOR);
+  Mat imagenOriginal = imread(image_path, IMREAD_UNCHANGED);
+  cv::cvtColor(imagenOriginal, imagenOriginal, cv::COLOR_RGB2RGBA);
 
   int procesosEsclavos = procesosTotales - procesosReservados;
 
