@@ -1,3 +1,3 @@
 #!/bin/bash
 
-mpirun --hostfile maquinas.txt ./dist/programa 2 test.png
+mpirun --hostfile maquinas.txt ./dist/programa 1 test.png

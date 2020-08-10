@@ -89,8 +89,6 @@ void unirImagen(int procesosReservados, int procesosTotales, const std::string &
   nombreArchivo << setfill('0');
   nombreArchivo << "operacion_" << tipoProceso << "_" << obtenerTiempo() << ".png";
 
-  imshow("Imagen procesada", imagenGenerada);
-  waitKey(0);
   imwrite(nombreArchivo.str(), imagenGenerada);
 }
 

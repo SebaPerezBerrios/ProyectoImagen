@@ -3,23 +3,19 @@
 
 #include <omp.h>
 
-#include <iostream>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
-#include <vector>
 
 #include "../lib/FuncionesMPI.h"
 
 namespace escalado {
 
 using namespace cv;
-using namespace std;
 
 void enviarImagen(int procesosReservados, int procesosTotales, const std::string& nombreArchivo) {
   std::string image_path = samples::findFile(nombreArchivo);
-
   Mat imagenOriginal = imread(image_path, IMREAD_UNCHANGED);
   cv::cvtColor(imagenOriginal, imagenOriginal, cv::COLOR_RGB2RGBA);
 
@@ -27,30 +23,23 @@ void enviarImagen(int procesosReservados, int procesosTotales, const std::string
 
   // crear particionado para enviar a cada nodo, particionado por fila
   auto particiones = particionar(imagenOriginal.rows, procesosEsclavos);
+  auto acumulado = vectorAcumulador(particiones);
 
   for (int proceso = 0; proceso < procesosEsclavos; proceso++) {
-    // generar sub imagen a ser enviada
-    auto regionEnviada = Rect(0, 0, imagenOriginal.cols, particiones[proceso]);
-    Mat imagenEnviada = imagenOriginal(regionEnviada);
+    auto regionAprocesar = Rect(0, acumulado[proceso], imagenOriginal.cols, particiones[proceso]);
+    Mat imagenAProcesar = imagenOriginal(regionAprocesar);
 
-    // envio de imagenes a esclavos
-    enviarImagenMPI(imagenEnviada, procesosReservados + proceso);
-
-    // quitar particion previamente enviada de imagen original
-    auto regionRestante =
-        Rect(0, particiones[proceso], imagenOriginal.cols, imagenOriginal.rows - particiones[proceso]);
-    imagenOriginal = imagenOriginal(regionRestante);
+    enviarImagenMPI(imagenAProcesar, procesosReservados + proceso);
   }
 }
 
 void procesarImagen() {
   auto imagenRecibida = recibirImagenMPI(0);
-
   int hilos = omp_get_max_threads();
+  Mat nuevaImagen;
+
   auto particiones = particionar(imagenRecibida.rows, hilos);
   auto acumulado = vectorAcumulador(particiones);
-
-  Mat nuevaImagen;
 
 #pragma omp for
   for (int proceso = 0; proceso < hilos; proceso++) {

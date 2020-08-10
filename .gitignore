@@ -4,6 +4,7 @@
 *.vscode
 *dist
 *programa
+operacion*
 
 # Compiled Object files
 *.slo
