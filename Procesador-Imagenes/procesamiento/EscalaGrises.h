@@ -33,14 +33,19 @@ void procesarImagen() {
   auto particiones = particionar(imagenRecibida.rows, hilos);
   auto acumulado = vectorAcumulador(particiones);
 
+  std::vector<cv::Mat> imagenesProcesadas(hilos);
+
 #pragma omp for
   for (int proceso = 0; proceso < hilos; proceso++) {
     // generar sub imagen a ser procesada por el hilo
     auto regionAprocesar = cv::Rect(0, acumulado[proceso], imagenRecibida.cols, particiones[proceso]);
     cv::Mat imagenAProcesar = imagenRecibida(regionAprocesar);
     cv::cvtColor(imagenAProcesar, imagenAProcesar, cv::COLOR_BGR2GRAY);
-#pragma omp critical
-    nuevaImagen.push_back(imagenAProcesar);
+    imagenesProcesadas[proceso] = imagenAProcesar;
+  }
+
+  for (const auto &imagenProcesada : imagenesProcesadas) {
+    nuevaImagen.push_back(imagenProcesada);
   }
 
   enviarImagenMPI(nuevaImagen, 0);

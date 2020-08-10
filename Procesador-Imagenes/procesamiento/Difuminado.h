@@ -45,6 +45,8 @@ void procesarImagen() {
   auto particiones = particionar(imagenRecibida.rows, hilos);
   auto acumulado = vectorAcumulador(particiones);
 
+  std::vector<cv::Mat> imagenesProcesadas(hilos);
+
 #pragma omp for
   for (int proceso = 0; proceso < hilos; proceso++) {
     int offsetArriba = (proceso == 0) ? 0 : offset;
@@ -60,10 +62,11 @@ void procesarImagen() {
     auto quitarOffset =
         cv::Rect(0, offsetArriba, imagenAProcesar.cols, imagenAProcesar.rows - offsetArriba - offsetAbajo);
 
-    imagenAProcesar = imagenAProcesar(quitarOffset);
+    imagenesProcesadas[proceso] = imagenAProcesar(quitarOffset);
+  }
 
-#pragma omp critical
-    nuevaImagen.push_back(imagenAProcesar);
+  for (const auto &imagenProcesada : imagenesProcesadas) {
+    nuevaImagen.push_back(imagenProcesada);
   }
 
   auto quitarOffset =
