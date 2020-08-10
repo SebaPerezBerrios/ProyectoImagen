@@ -12,27 +12,30 @@ void enviarImagenMPI(cv::Mat& img, int destino) {
   int filas = img.rows;
   int columnas = img.cols;
   int dimension = img.elemSize();
+  int tipo = img.type();
 
   int dimensionDatos = filas * columnas * dimension;
 
-  int dimensiones[3];
+  int dimensiones[4];
   dimensiones[0] = filas;
   dimensiones[1] = columnas;
   dimensiones[2] = dimension;
+  dimensiones[3] = tipo;
 
-  MPI_Send(dimensiones, 3, MPI_INT, destino, 0, MPI_COMM_WORLD);
+  MPI_Send(dimensiones, 4, MPI_INT, destino, 0, MPI_COMM_WORLD);
   MPI_Send(img.data, dimensionDatos, MPI_UNSIGNED_CHAR, destino, 0, MPI_COMM_WORLD);
 }
 
-cv::Mat recibirImagenMPI(int origen, int tipoImagen = CV_8UC4) {
+cv::Mat recibirImagenMPI(int origen) {
   MPI_Status status;
 
-  int dimensiones[3];
-  MPI_Recv(dimensiones, 3, MPI_INT, origen, 0, MPI_COMM_WORLD, &status);
+  int dimensiones[4];
+  MPI_Recv(dimensiones, 4, MPI_INT, origen, 0, MPI_COMM_WORLD, &status);
 
   int filas = dimensiones[0];
   int columnas = dimensiones[1];
   int dimension = dimensiones[2];
+  int tipo = dimensiones[3];
 
   int dimensionDatos = filas * columnas * dimension;
 
@@ -40,7 +43,7 @@ cv::Mat recibirImagenMPI(int origen, int tipoImagen = CV_8UC4) {
 
   MPI_Recv(datosPtr, dimensionDatos, MPI_UNSIGNED_CHAR, origen, 0, MPI_COMM_WORLD, &status);
 
-  auto imagen = cv::Mat(filas, columnas, tipoImagen, datosPtr).clone();
+  auto imagen = cv::Mat(filas, columnas, tipo, datosPtr).clone();
   delete[] datosPtr;
   return imagen;
 }

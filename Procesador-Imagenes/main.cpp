@@ -55,7 +55,6 @@ int main(int argc, char **argv) {
     }
 
     cv::Mat imagenOriginal = cv::imread(nombreImagen, cv::IMREAD_UNCHANGED);
-    cv::cvtColor(imagenOriginal, imagenOriginal, cv::COLOR_RGB2RGBA);
 
     if (tipoProceso == "1") {
       difuminado::enviarImagen(procesosReservados, procesosTotales, imagenOriginal);
@@ -86,11 +85,9 @@ void unirImagen(int procesosReservados, int procesosTotales, const std::string &
   auto imagenGenerada = cv::Mat();
   int procesosEsclavos = procesosTotales - procesosReservados;
 
-  auto tipoImagen = (tipoProceso == "2") ? CV_8UC1 : CV_8UC4;
-
   // crear nueva imagen a partir de particiones
   for (int proceso = 0; proceso < procesosEsclavos; proceso++) {
-    auto imagenRecibida = recibirImagenMPI(procesosReservados + proceso, tipoImagen);
+    auto imagenRecibida = recibirImagenMPI(procesosReservados + proceso);
     imagenGenerada.push_back(imagenRecibida);
   }
 
