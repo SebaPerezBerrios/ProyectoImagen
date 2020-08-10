@@ -4,23 +4,18 @@
 #include <iomanip>
 #include <iostream>
 #include <opencv2/core.hpp>
-#include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
-#include <opencv2/imgproc.hpp>
-#include <vector>
 
 #include "lib/FuncionesMPI.h"
 #include "procesamiento/Difuminado.h"
 #include "procesamiento/EscalaGrises.h"
 #include "procesamiento/Escalado.h"
 
-using namespace cv;
-using namespace std;
-
 #define Orquestador 0
 
 void unirImagen(int, int, const std::string &);
 std::string obtenerTiempo();
+void participante();
 
 int main(int argc, char **argv) {
   int mi_rango;
@@ -50,18 +45,25 @@ int main(int argc, char **argv) {
   auto tipoProceso = std::string(argv[1]);
 
   if (mi_rango == Orquestador) {
+    // lectura imagen, por defecto se convierte a 4 canales para compatibilidad con archivos PNG con transparencia
+    std::string nombreImagen = cv::samples::findFile(argv[2]);
+    cv::Mat imagenOriginal = cv::imread(nombreImagen, cv::IMREAD_UNCHANGED);
+    cv::cvtColor(imagenOriginal, imagenOriginal, cv::COLOR_RGB2RGBA);
+
     if (tipoProceso == "1") {
-      difuminado::enviarImagen(procesosReservados, procesosTotales, argv[2]);
+      difuminado::enviarImagen(procesosReservados, procesosTotales, imagenOriginal);
     }
     if (tipoProceso == "2") {
-      escalaGrises::enviarImagen(procesosReservados, procesosTotales, argv[2]);
+      escalaGrises::enviarImagen(procesosReservados, procesosTotales, imagenOriginal);
     }
 
     if (tipoProceso == "3") {
-      escalado::enviarImagen(procesosReservados, procesosTotales, argv[2]);
+      escalado::enviarImagen(procesosReservados, procesosTotales, imagenOriginal);
     }
 
     unirImagen(procesosReservados, procesosTotales, tipoProceso);
+
+    participante();
   }
   if (mi_rango != Orquestador) { /* Esclavo */
     if (tipoProceso == "1") difuminado::procesarImagen();
@@ -74,7 +76,7 @@ int main(int argc, char **argv) {
 }
 
 void unirImagen(int procesosReservados, int procesosTotales, const std::string &tipoProceso) {
-  auto imagenGenerada = Mat();
+  auto imagenGenerada = cv::Mat();
   int procesosEsclavos = procesosTotales - procesosReservados;
 
   auto tipoImagen = (tipoProceso == "2") ? CV_8UC1 : CV_8UC4;
@@ -86,7 +88,7 @@ void unirImagen(int procesosReservados, int procesosTotales, const std::string &
   }
 
   std::stringstream nombreArchivo;
-  nombreArchivo << setfill('0');
+  nombreArchivo << std::setfill('0');
   nombreArchivo << "operacion_" << tipoProceso << "_" << obtenerTiempo() << ".png";
 
   imwrite(nombreArchivo.str(), imagenGenerada);
@@ -95,10 +97,17 @@ void unirImagen(int procesosReservados, int procesosTotales, const std::string &
 std::string obtenerTiempo() {
   auto tiempo = time(0);
   auto tiempoLocalPtr = std::localtime(&tiempo);
-  stringstream tiempoLocal;
-  tiempoLocal << setfill('0');
+  std::stringstream tiempoLocal;
+  tiempoLocal << std::setfill('0');
   tiempoLocal << std::setw(4) << tiempoLocalPtr->tm_year + 1900 << std::setw(2) << tiempoLocalPtr->tm_mon + 1
               << std::setw(2) << tiempoLocalPtr->tm_mday << std::setw(2) << tiempoLocalPtr->tm_hour << std::setw(2)
               << tiempoLocalPtr->tm_min << std::setw(2) << tiempoLocalPtr->tm_sec;
   return tiempoLocal.str();
+}
+
+void participante() {
+  std::cout << std::endl << "=== Trabajo tratamiento de imagenes ===" << std::endl;
+  std::cout << std::endl << "Sebastián Pérez Berrios" << std::endl;
+  std::cout << std::endl << "Ivan Pérez" << std::endl;
+  std::cout << std::endl << "Lester Vasquez" << std::endl;
 }

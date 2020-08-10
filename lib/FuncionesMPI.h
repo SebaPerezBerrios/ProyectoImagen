@@ -6,9 +6,7 @@
 #include <opencv2/core.hpp>
 #include <vector>
 
-using namespace cv;
-
-void enviarImagenMPI(Mat& img, int destino) {
+void enviarImagenMPI(cv::Mat& img, int destino) {
   // en caso de que no sea continua se genera una copia continua
   if (!img.isContinuous()) img = img.clone();
   int filas = img.rows;
@@ -26,7 +24,7 @@ void enviarImagenMPI(Mat& img, int destino) {
   MPI_Send(img.data, dimensionDatos, MPI_UNSIGNED_CHAR, destino, 0, MPI_COMM_WORLD);
 }
 
-Mat recibirImagenMPI(int origen, int tipoImagen = CV_8UC4) {
+cv::Mat recibirImagenMPI(int origen, int tipoImagen = CV_8UC4) {
   MPI_Status status;
 
   int dimensiones[3];
@@ -42,7 +40,7 @@ Mat recibirImagenMPI(int origen, int tipoImagen = CV_8UC4) {
 
   MPI_Recv(datosPtr, dimensionDatos, MPI_UNSIGNED_CHAR, origen, 0, MPI_COMM_WORLD, &status);
 
-  auto imagen = Mat(filas, columnas, tipoImagen, datosPtr).clone();
+  auto imagen = cv::Mat(filas, columnas, tipoImagen, datosPtr).clone();
   delete[] datosPtr;
   return imagen;
 }
