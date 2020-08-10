@@ -2,7 +2,7 @@ CXX = mpic++
 CXXFLAGS = -O3 -fopenmp -Wall -I/usr/include/opencv4 -I/usr/include/opencv4/opencv
 MKDIR = mkdir -p
 
-LIBS = -lm -lmpi -lopencv_highgui -lopencv_imgcodecs -lopencv_features2d -lopencv_flann -lopencv_xphoto -lopencv_photo -lopencv_imgproc -lopencv_core
+LIBS = -lm -lmpi -lopencv_imgcodecs -lopencv_imgproc -lopencv_core
 
 directorios:
 	$(MKDIR) build dist

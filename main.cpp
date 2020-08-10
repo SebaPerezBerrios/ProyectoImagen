@@ -46,19 +46,26 @@ int main(int argc, char **argv) {
 
   if (mi_rango == Orquestador) {
     // lectura imagen, por defecto se convierte a 4 canales para compatibilidad con archivos PNG con transparencia
-    std::string nombreImagen = cv::samples::findFile(argv[2]);
+    std::string nombreImagen;
+    try {
+      nombreImagen = cv::samples::findFile(argv[2]);
+    } catch (...) {
+      std::cerr << "Imagen no encontrada" << std::endl;
+      return EXIT_FAILURE;
+    }
+
     cv::Mat imagenOriginal = cv::imread(nombreImagen, cv::IMREAD_UNCHANGED);
     cv::cvtColor(imagenOriginal, imagenOriginal, cv::COLOR_RGB2RGBA);
 
     if (tipoProceso == "1") {
       difuminado::enviarImagen(procesosReservados, procesosTotales, imagenOriginal);
-    }
-    if (tipoProceso == "2") {
+    } else if (tipoProceso == "2") {
       escalaGrises::enviarImagen(procesosReservados, procesosTotales, imagenOriginal);
-    }
-
-    if (tipoProceso == "3") {
+    } else if (tipoProceso == "3") {
       escalado::enviarImagen(procesosReservados, procesosTotales, imagenOriginal);
+    } else {
+      std::cerr << "Opcion no valida" << std::endl;
+      return EXIT_FAILURE;
     }
 
     unirImagen(procesosReservados, procesosTotales, tipoProceso);
