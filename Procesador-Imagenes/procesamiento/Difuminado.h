@@ -26,7 +26,7 @@ void enviarImagen(int procesosReservados, int procesosTotales, const cv::Mat &im
     int offsetAbajo = (proceso + 1 == procesosEsclavos) ? 0 : offset;
 
     auto regionAprocesar = cv::Rect(0, acumulado[proceso] - offsetArriba, imagenOriginal.cols,
-                                particiones[proceso] + offsetArriba + offsetAbajo);
+                                    particiones[proceso] + offsetArriba + offsetAbajo);
     cv::Mat imagenAProcesar = imagenOriginal(regionAprocesar);
 
     enviarImagenMPI(imagenAProcesar, procesosReservados + proceso);
@@ -52,12 +52,13 @@ void procesarImagen() {
 
     // generar sub imagen a ser procesada por el hilo
     auto regionAprocesar = cv::Rect(0, acumulado[proceso] - offsetArriba, imagenRecibida.cols,
-                                particiones[proceso] + offsetArriba + offsetAbajo);
+                                    particiones[proceso] + offsetArriba + offsetAbajo);
     cv::Mat imagenAProcesar = imagenRecibida(regionAprocesar).clone();
 
     GaussianBlur(imagenAProcesar, imagenAProcesar, cv::Size(Blur, Blur), 0, 0);
 
-    auto quitarOffset = cv::Rect(0, offsetArriba, imagenAProcesar.cols, imagenAProcesar.rows - offsetArriba - offsetAbajo);
+    auto quitarOffset =
+        cv::Rect(0, offsetArriba, imagenAProcesar.cols, imagenAProcesar.rows - offsetArriba - offsetAbajo);
 
     imagenAProcesar = imagenAProcesar(quitarOffset);
 
@@ -65,7 +66,8 @@ void procesarImagen() {
     nuevaImagen.push_back(imagenAProcesar);
   }
 
-  auto quitarOffset = cv::Rect(0, offsetArribaMPI, nuevaImagen.cols, nuevaImagen.rows - offsetArribaMPI - offsetAbajoMPI);
+  auto quitarOffset =
+      cv::Rect(0, offsetArribaMPI, nuevaImagen.cols, nuevaImagen.rows - offsetArribaMPI - offsetAbajoMPI);
 
   auto imagenRecortada = nuevaImagen(quitarOffset);
 
