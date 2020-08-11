@@ -3,7 +3,6 @@
 
 #include <ctime>
 #include <iomanip>
-#include <iostream>
 #include <opencv2/core.hpp>
 
 #include "FuncionesMPI.h"

@@ -4,7 +4,6 @@
 #include <mpi.h>
 
 #include <opencv2/core.hpp>
-#include <vector>
 
 void enviarImagenMPI(cv::Mat& img, int destino) {
   // en caso de que no sea continua se genera una copia continua

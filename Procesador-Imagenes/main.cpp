@@ -1,5 +1,3 @@
-#include <mpi.h>
-
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
 
