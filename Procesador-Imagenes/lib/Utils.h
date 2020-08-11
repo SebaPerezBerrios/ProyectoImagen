@@ -33,8 +33,7 @@ std::string obtenerTiempo() {
 
 int calculoOffset(const cv::Mat &imagen) {
   int ladoMasCorto = std::min(imagen.rows, imagen.cols);
-  int difuminado = std::max((double)ladoMasCorto * 0.02, 10.0);
-  return (difuminado % 2 == 0) ? difuminado : difuminado + 1;
+  return (int)std::max((double)ladoMasCorto * 0.02, 10.0);
 }
 
 void participante() {
