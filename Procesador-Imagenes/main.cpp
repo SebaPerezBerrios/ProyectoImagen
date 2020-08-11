@@ -1,21 +1,14 @@
 #include <mpi.h>
 
-#include <ctime>
-#include <iomanip>
-#include <iostream>
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
 
-#include "lib/FuncionesMPI.h"
-#include "procesamiento/Difuminado.h"
-#include "procesamiento/EscalaGrises.h"
-#include "procesamiento/Escalado.h"
+#include "lib/Utils.h"
+#include "procesamiento/ProcesadoImagen.h"
+#include "procesamiento/TransporteImagen.h"
+#include "procesamiento/TransporteImagenOffset.h"
 
 #define Orquestador 0
-
-void unirImagen(int, int, const std::string &);
-std::string obtenerTiempo();
-void participante();
 
 int main(int argc, char **argv) {
   int mi_rango;
@@ -57,61 +50,34 @@ int main(int argc, char **argv) {
     cv::Mat imagenOriginal = cv::imread(nombreImagen, cv::IMREAD_UNCHANGED);
 
     if (tipoProceso == "1") {
-      difuminado::enviarImagen(procesosReservados, procesosTotales, imagenOriginal);
+      // se calcula el offset necesario para el difuminado
+      auto offset = calculoOffset(imagenOriginal);
+      enviarImagenOffset(procesosReservados, procesosTotales, offset, imagenOriginal);
     } else if (tipoProceso == "2") {
-      escalaGrises::enviarImagen(procesosReservados, procesosTotales, imagenOriginal);
+      enviarImagen(procesosReservados, procesosTotales, imagenOriginal);
     } else if (tipoProceso == "3") {
-      escalado::enviarImagen(procesosReservados, procesosTotales, imagenOriginal);
+      enviarImagen(procesosReservados, procesosTotales, imagenOriginal);
     } else {
       std::cerr << "Opcion no valida" << std::endl;
       return EXIT_FAILURE;
     }
 
-    unirImagen(procesosReservados, procesosTotales, tipoProceso);
+    auto imagenRecibida = unirImagen(procesosReservados, procesosTotales);
+
+    std::stringstream nombreArchivo;
+    nombreArchivo << std::setfill('0');
+    nombreArchivo << "operacion_" << tipoProceso << "_" << obtenerTiempo() << ".png";
+    imwrite(nombreArchivo.str(), imagenRecibida);
 
     participante();
   }
+
   if (mi_rango != Orquestador) { /* Esclavo */
-    if (tipoProceso == "1") difuminado::procesarImagen();
-    if (tipoProceso == "2") escalaGrises::procesarImagen();
-    if (tipoProceso == "3") escalado::procesarImagen();
+    if (tipoProceso == "1") procesarImagenOffset(difuminarImagen);
+    if (tipoProceso == "2") procesarImagen(escalaGrisesImagen);
+    if (tipoProceso == "3") procesarImagen(escalarImagen);
   }
 
   MPI_Finalize();
   return EXIT_SUCCESS;
-}
-
-void unirImagen(int procesosReservados, int procesosTotales, const std::string &tipoProceso) {
-  auto imagenGenerada = cv::Mat();
-  int procesosEsclavos = procesosTotales - procesosReservados;
-
-  // crear nueva imagen a partir de particiones
-  for (int proceso = 0; proceso < procesosEsclavos; proceso++) {
-    auto imagenRecibida = recibirImagenMPI(procesosReservados + proceso);
-    imagenGenerada.push_back(imagenRecibida);
-  }
-
-  std::stringstream nombreArchivo;
-  nombreArchivo << std::setfill('0');
-  nombreArchivo << "operacion_" << tipoProceso << "_" << obtenerTiempo() << ".png";
-
-  imwrite(nombreArchivo.str(), imagenGenerada);
-}
-
-std::string obtenerTiempo() {
-  auto tiempo = time(0);
-  auto tiempoLocalPtr = std::localtime(&tiempo);
-  std::stringstream tiempoLocal;
-  tiempoLocal << std::setfill('0');
-  tiempoLocal << std::setw(4) << tiempoLocalPtr->tm_year + 1900 << std::setw(2) << tiempoLocalPtr->tm_mon + 1
-              << std::setw(2) << tiempoLocalPtr->tm_mday << std::setw(2) << tiempoLocalPtr->tm_hour << std::setw(2)
-              << tiempoLocalPtr->tm_min << std::setw(2) << tiempoLocalPtr->tm_sec;
-  return tiempoLocal.str();
-}
-
-void participante() {
-  std::cout << std::endl << "=== Trabajo tratamiento de imagenes ===" << std::endl;
-  std::cout << std::endl << "Sebastián Pérez Berrios" << std::endl;
-  std::cout << std::endl << "Ivan Pérez" << std::endl;
-  std::cout << std::endl << "Lester Vasquez" << std::endl;
 }

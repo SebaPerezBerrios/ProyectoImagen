@@ -1,14 +1,10 @@
-#ifndef Escalado_H
-#define Escalado_H
+#ifndef TransporteImagen_H
+#define TransporteImagen_H
 
 #include <omp.h>
 
-#include <opencv2/core.hpp>
-#include <opencv2/imgproc.hpp>
-
 #include "../lib/FuncionesMPI.h"
-
-namespace escalado {
+#include "../lib/Particionado.h"
 
 void enviarImagen(int procesosReservados, int procesosTotales, const cv::Mat &imagenOriginal) {
   int procesosEsclavos = procesosTotales - procesosReservados;
@@ -25,7 +21,7 @@ void enviarImagen(int procesosReservados, int procesosTotales, const cv::Mat &im
   }
 }
 
-void procesarImagen() {
+void procesarImagen(const std::function<void(cv::Mat &)> &transformacion) {
   auto imagenRecibida = recibirImagenMPI(0);
   int hilos = omp_get_max_threads();
   cv::Mat nuevaImagen;
@@ -39,8 +35,10 @@ void procesarImagen() {
   for (int proceso = 0; proceso < hilos; proceso++) {
     // generar sub imagen a ser procesada por el hilo
     auto regionAprocesar = cv::Rect(0, acumulado[proceso], imagenRecibida.cols, particiones[proceso]);
-    cv::Mat imagenAProcesar = imagenRecibida(regionAprocesar);
-    resize(imagenAProcesar, imagenAProcesar, cv::Size(), 1.33, 1.33);
+    auto imagenAProcesar = imagenRecibida(regionAprocesar);
+
+    transformacion(imagenAProcesar);
+
     imagenesProcesadas[proceso] = imagenAProcesar;
   }
 
@@ -50,5 +48,5 @@ void procesarImagen() {
 
   enviarImagenMPI(nuevaImagen, 0);
 }
-}  // namespace escalado
+
 #endif

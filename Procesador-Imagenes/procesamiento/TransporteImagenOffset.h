@@ -1,20 +1,12 @@
-#ifndef Difuminado_H
-#define Difuminado_H
+#ifndef TransporteImagenOffset_H
+#define TransporteImagenOffset_H
 
 #include <omp.h>
 
-#include <opencv2/core.hpp>
-#include <opencv2/imgproc.hpp>
-
 #include "../lib/FuncionesMPI.h"
+#include "../lib/Particionado.h"
 
-namespace difuminado {
-
-// offset usado para el blur, se envian regiones anexas para tener un difuminado suave entre particiones
-int Blur = 25;
-int offset = Blur / 2;
-
-void enviarImagen(int procesosReservados, int procesosTotales, const cv::Mat &imagenOriginal) {
+void enviarImagenOffset(int procesosReservados, int procesosTotales, int offset, const cv::Mat &imagenOriginal) {
   int procesosEsclavos = procesosTotales - procesosReservados;
 
   // crear particionado para enviar a cada nodo, particionado por fila
@@ -32,13 +24,18 @@ void enviarImagen(int procesosReservados, int procesosTotales, const cv::Mat &im
     enviarImagenMPI(imagenAProcesar, procesosReservados + proceso);
     enviarIntMPI(offsetArriba, procesosReservados + proceso);
     enviarIntMPI(offsetAbajo, procesosReservados + proceso);
+    enviarIntMPI(offset, procesosReservados + proceso);
   }
 }
 
-void procesarImagen() {
+void procesarImagenOffset(const std::function<void(cv::Mat &, int intensidad)> &transformacion) {
   auto imagenRecibida = recibirImagenMPI(0);
   int offsetArribaMPI = recibirIntMPI(0);
   int offsetAbajoMPI = recibirIntMPI(0);
+
+  int offset = recibirIntMPI(0);
+  int intensidad = offset * 2 + 1;
+
   int hilos = omp_get_max_threads();
   cv::Mat nuevaImagen;
 
@@ -57,7 +54,7 @@ void procesarImagen() {
                                     particiones[proceso] + offsetArriba + offsetAbajo);
     cv::Mat imagenAProcesar = imagenRecibida(regionAprocesar).clone();
 
-    GaussianBlur(imagenAProcesar, imagenAProcesar, cv::Size(Blur, Blur), 0, 0);
+    transformacion(imagenAProcesar, intensidad);
 
     auto quitarOffset =
         cv::Rect(0, offsetArriba, imagenAProcesar.cols, imagenAProcesar.rows - offsetArriba - offsetAbajo);
@@ -76,5 +73,5 @@ void procesarImagen() {
 
   enviarImagenMPI(imagenRecortada, 0);
 }
-}  // namespace difuminado
+
 #endif
