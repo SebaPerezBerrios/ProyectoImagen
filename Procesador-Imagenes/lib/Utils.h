@@ -51,7 +51,7 @@ std::string obtenerTiempo() {
  */
 int calculoOffset(const cv::Mat &imagen) {
   int ladoMasCorto = std::min(imagen.rows, imagen.cols);
-  return (int)std::max((double)ladoMasCorto * 0.02, 5.0);
+  return (int)std::max((double)ladoMasCorto * 0.01, 3.0);
 }
 
 void participante() {
