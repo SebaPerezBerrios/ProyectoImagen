@@ -6,6 +6,14 @@
 #include "../lib/FuncionesMPI.h"
 #include "../lib/Particionado.h"
 
+/**
+ * Funcion que particiona y envia una imagen a travez de MPI a los nodos esclavos
+ *
+ * @param procesosReservados cantidad de nodos reservados.
+ * @param procesosTotales cantidad de nodos totales.
+ * @param imagenOriginal imagen que sera subdividida y enviada a los nodos esclavos junto a un offset usado en la
+ * transformacion posterior.
+ */
 void enviarImagenOffset(int procesosReservados, int procesosTotales, int offset, const cv::Mat &imagenOriginal) {
   int procesosEsclavos = procesosTotales - procesosReservados;
 
@@ -28,6 +36,13 @@ void enviarImagenOffset(int procesosReservados, int procesosTotales, int offset,
   }
 }
 
+/**
+ * Funcion que recibe una particion de imagen junto a pixeles extra y aplica una transfrmacion sobre esta, luego retorna
+ * el resultado al nodo orquestador sin los pixeles extra.
+ *
+ * @param transformacion funcion que aplica una transformacion a una imagen, la funcion puede hacer uso de los pixeles
+ * extra para su computo, ejemplo la funcion de difuminado.
+ */
 void procesarImagenOffset(const std::function<void(cv::Mat &, int intensidad)> &transformacion) {
   auto imagenRecibida = recibirImagenMPI(0);
   int offsetArribaMPI = recibirIntMPI(0);
@@ -44,7 +59,7 @@ void procesarImagenOffset(const std::function<void(cv::Mat &, int intensidad)> &
 
   std::vector<cv::Mat> imagenesProcesadas(hilos);
 
-#pragma omp for
+#pragma omp parallel for
   for (int proceso = 0; proceso < hilos; proceso++) {
     int offsetArriba = (proceso == 0) ? 0 : offset;
     int offsetAbajo = (proceso + 1 == hilos) ? 0 : offset;

@@ -7,6 +7,13 @@
 
 #include "FuncionesMPI.h"
 
+/**
+ * Funcion que recibe imagenes de los nodos esclavos y las unifica en una imagen resultante
+ *
+ * @param procesosReservados cantidad de nodos reservados.
+ * @param procesosTotales cantidad de nodos totales.
+ * @returns imagen reconstruida.
+ */
 cv::Mat unirImagen(int procesosReservados, int procesosTotales) {
   auto imagenGenerada = cv::Mat();
   int procesosEsclavos = procesosTotales - procesosReservados;
@@ -20,6 +27,10 @@ cv::Mat unirImagen(int procesosReservados, int procesosTotales) {
   return imagenGenerada;
 }
 
+/**
+ * Funcion que genera la fecha en formato yyyyMMddhhmmss
+ * @returns string con la fecha generada.
+ */
 std::string obtenerTiempo() {
   auto tiempo = time(0);
   auto tiempoLocalPtr = std::localtime(&tiempo);
@@ -31,9 +42,16 @@ std::string obtenerTiempo() {
   return tiempoLocal.str();
 }
 
+/**
+ * Funcion que genera genera un offset apropiado para una imagen que será transformada usando funciones que requieren
+ * pixeles extra como lo es el difuminado.
+ *
+ * @param imagen imagen.
+ * @returns cantidad de pixeles de offset que usara la funcion de transformacion.
+ */
 int calculoOffset(const cv::Mat &imagen) {
   int ladoMasCorto = std::min(imagen.rows, imagen.cols);
-  return (int)std::max((double)ladoMasCorto * 0.02, 10.0);
+  return (int)std::max((double)ladoMasCorto * 0.02, 5.0);
 }
 
 void participante() {

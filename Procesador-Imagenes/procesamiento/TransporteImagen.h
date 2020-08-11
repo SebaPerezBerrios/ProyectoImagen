@@ -6,6 +6,13 @@
 #include "../lib/FuncionesMPI.h"
 #include "../lib/Particionado.h"
 
+/**
+ * Funcion que particiona y envia una imagen a travez de MPI a los nodos esclavos
+ *
+ * @param procesosReservados cantidad de nodos reservados.
+ * @param procesosTotales cantidad de nodos totales.
+ * @param imagenOriginal imagen que sera subdividida y enviada a los nodos esclavos.
+ */
 void enviarImagen(int procesosReservados, int procesosTotales, const cv::Mat &imagenOriginal) {
   int procesosEsclavos = procesosTotales - procesosReservados;
 
@@ -21,6 +28,13 @@ void enviarImagen(int procesosReservados, int procesosTotales, const cv::Mat &im
   }
 }
 
+/**
+ * Funcion que recibe una particion de imagen y aplica una transfrmacion sobre esta, luego retorna el resultado al nodo
+ * orquestador
+ *
+ * @param transformacion funcion que aplica una transformacion a una imagen, la funcion no debe depender de pixeles
+ * anexos.
+ */
 void procesarImagen(const std::function<void(cv::Mat &)> &transformacion) {
   auto imagenRecibida = recibirImagenMPI(0);
   int hilos = omp_get_max_threads();
@@ -31,7 +45,7 @@ void procesarImagen(const std::function<void(cv::Mat &)> &transformacion) {
 
   std::vector<cv::Mat> imagenesProcesadas(hilos);
 
-#pragma omp for
+#pragma omp parallel for
   for (int proceso = 0; proceso < hilos; proceso++) {
     // generar sub imagen a ser procesada por el hilo
     auto regionAprocesar = cv::Rect(0, acumulado[proceso], imagenRecibida.cols, particiones[proceso]);

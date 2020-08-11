@@ -7,7 +7,11 @@
 #include "procesamiento/TransporteImagenOffset.h"
 
 #define Orquestador 0
-
+/**
+ * Funcion principal encargada de inicializar MPI, enviar y recibir mensajes segun tipo de nodo.
+ *
+ * @param argv tipo de operacin y nombre de archivo.
+ */
 int main(int argc, char **argv) {
   int mi_rango;
   int procesosTotales;
