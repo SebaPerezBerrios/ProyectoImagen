@@ -21,7 +21,10 @@ cv::Mat unirImagen(int procesosReservados, int procesosTotales) {
   // crear nueva imagen a partir de particiones
   for (int proceso = 0; proceso < procesosEsclavos; proceso++) {
     auto imagenRecibida = recibirImagenMPI(procesosReservados + proceso);
-    imagenGenerada.push_back(imagenRecibida);
+    if (proceso == 0) {
+      imagenGenerada = imagenRecibida;
+    } else
+      cv::hconcat(imagenGenerada, imagenRecibida, imagenGenerada);
   }
 
   return imagenGenerada;
