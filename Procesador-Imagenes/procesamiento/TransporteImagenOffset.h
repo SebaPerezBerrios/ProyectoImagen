@@ -17,21 +17,21 @@
 void enviarImagenOffset(int procesosReservados, int procesosTotales, int offset, const cv::Mat &imagenOriginal) {
   int procesosEsclavos = procesosTotales - procesosReservados;
 
-  // crear particionado para enviar a cada nodo, particionado por fila
-  auto particiones = particionar(imagenOriginal.rows, procesosEsclavos);
+  // crear particionado para enviar a cada nodo, particionado por columna
+  auto particiones = particionar(imagenOriginal.cols, procesosEsclavos);
   auto acumulado = vectorAcumulador(particiones);
 
   for (int proceso = 0; proceso < procesosEsclavos; proceso++) {
-    int offsetArriba = (proceso == 0) ? 0 : offset;
-    int offsetAbajo = (proceso + 1 == procesosEsclavos) ? 0 : offset;
+    int offsetIzq = (proceso == 0) ? 0 : offset;
+    int offsetDer = (proceso + 1 == procesosEsclavos) ? 0 : offset;
 
-    auto regionAprocesar = cv::Rect(0, acumulado[proceso] - offsetArriba, imagenOriginal.cols,
-                                    particiones[proceso] + offsetArriba + offsetAbajo);
+    auto regionAprocesar =
+        cv::Rect(acumulado[proceso] - offsetIzq, 0, particiones[proceso] + offsetIzq + offsetDer, imagenOriginal.rows);
     cv::Mat imagenAProcesar = imagenOriginal(regionAprocesar);
 
     enviarImagenMPI(imagenAProcesar, procesosReservados + proceso);
-    enviarIntMPI(offsetArriba, procesosReservados + proceso);
-    enviarIntMPI(offsetAbajo, procesosReservados + proceso);
+    enviarIntMPI(offsetIzq, procesosReservados + proceso);
+    enviarIntMPI(offsetDer, procesosReservados + proceso);
     enviarIntMPI(offset, procesosReservados + proceso);
   }
 }
@@ -45,8 +45,8 @@ void enviarImagenOffset(int procesosReservados, int procesosTotales, int offset,
  */
 void procesarImagenOffset(const std::function<void(cv::Mat &, int intensidad)> &transformacion) {
   auto imagenRecibida = recibirImagenMPI(0);
-  int offsetArribaMPI = recibirIntMPI(0);
-  int offsetAbajoMPI = recibirIntMPI(0);
+  int offsetIzqMPI = recibirIntMPI(0);
+  int offsetDerMPI = recibirIntMPI(0);
 
   int offset = recibirIntMPI(0);
   int intensidad = offset * 2 + 1;
@@ -61,18 +61,17 @@ void procesarImagenOffset(const std::function<void(cv::Mat &, int intensidad)> &
 
 #pragma omp parallel for
   for (int proceso = 0; proceso < hilos; proceso++) {
-    int offsetArriba = (proceso == 0) ? 0 : offset;
-    int offsetAbajo = (proceso + 1 == hilos) ? 0 : offset;
+    int offsetIzq = (proceso == 0) ? 0 : offset;
+    int offsetDer = (proceso + 1 == hilos) ? 0 : offset;
 
     // generar sub imagen a ser procesada por el hilo
-    auto regionAprocesar = cv::Rect(0, acumulado[proceso] - offsetArriba, imagenRecibida.cols,
-                                    particiones[proceso] + offsetArriba + offsetAbajo);
+    auto regionAprocesar =
+        cv::Rect(0, acumulado[proceso] - offsetIzq, imagenRecibida.cols, particiones[proceso] + offsetIzq + offsetDer);
     cv::Mat imagenAProcesar = imagenRecibida(regionAprocesar).clone();
 
     transformacion(imagenAProcesar, intensidad);
 
-    auto quitarOffset =
-        cv::Rect(0, offsetArriba, imagenAProcesar.cols, imagenAProcesar.rows - offsetArriba - offsetAbajo);
+    auto quitarOffset = cv::Rect(0, offsetIzq, imagenAProcesar.cols, imagenAProcesar.rows - offsetIzq - offsetDer);
 
     imagenesProcesadas[proceso] = imagenAProcesar(quitarOffset);
   }
@@ -81,8 +80,7 @@ void procesarImagenOffset(const std::function<void(cv::Mat &, int intensidad)> &
     nuevaImagen.push_back(imagenProcesada);
   }
 
-  auto quitarOffset =
-      cv::Rect(0, offsetArribaMPI, nuevaImagen.cols, nuevaImagen.rows - offsetArribaMPI - offsetAbajoMPI);
+  auto quitarOffset = cv::Rect(offsetIzqMPI, 0, nuevaImagen.cols - offsetIzqMPI - offsetDerMPI, nuevaImagen.rows);
 
   auto imagenRecortada = nuevaImagen(quitarOffset);
 
